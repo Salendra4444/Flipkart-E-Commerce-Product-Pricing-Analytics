@@ -52,6 +52,7 @@ The dataset is a public product-listing crawl from Flipkart and is not the datas
 | File | Description |
 |---|---|
 | `project.py` | Complete Python code for data cleaning, EDA, visualization, and the bonus ML model |
+| `app.py` | Streamlit dashboard entry point for local use and Streamlit Cloud deployment |
 | `requirements.txt` | Python libraries required to run the project |
 | `README.md` | This file |
 | `Project_Report.pdf` | Full project documentation with methodology, screenshots, and insights |
@@ -78,6 +79,14 @@ The dataset is a public product-listing crawl from Flipkart and is not the datas
    - Charts are saved to the `screenshots/` folder
    - Business insights are written to `business_insights.txt`
    - A cleaned version of the dataset is saved as `cleaned_flipkart_data.csv`
+
+## Run the dashboard
+
+```bash
+streamlit run app.py
+```
+
+For Streamlit Cloud, set the main file to `app.py`. Running `project.py` directly remains available for batch output generation.
 
 ## Key Business Insights (Summary)
 

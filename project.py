@@ -75,8 +75,12 @@ def clean_dataset(df):
     df["brand"] = df["brand"].fillna("Unknown")
     df["brand"] = df["brand"].replace("", "Unknown")
 
-    df["is_FK_Advantage_product"] = df["is_FK_Advantage_product"].fillna(False)
-    df["is_FK_Advantage_product"] = df["is_FK_Advantage_product"].astype(bool)
+    df["is_FK_Advantage_product"] = (
+        df["is_FK_Advantage_product"]
+        .map({True: True, False: False, "True": True, "False": False, "true": True, "false": False})
+        .fillna(False)
+        .astype(bool)
+    )
 
     df["description"] = df["description"].fillna("")
     df["description_length"] = df["description"].apply(lambda x: len(str(x).split()))
