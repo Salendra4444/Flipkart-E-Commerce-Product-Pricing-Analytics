@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore")
 sns.set_theme(style="whitegrid")
 
 DATA_PATH = "flipkart_com-ecommerce_sample.csv"
-OUTPUT_DIR = "screenshots"
+OUTPUT_DIR = "Scrennshots"
 INSIGHTS_FILE = "business_insights.txt"
 
 os.makedirs(OUTPUT_DIR, exist_ok=True)

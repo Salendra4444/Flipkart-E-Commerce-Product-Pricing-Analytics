@@ -27,6 +27,31 @@ st.set_page_config(
     layout="wide",
 )
 
+st.markdown(
+    """
+    <style>
+    [data-testid="stMetric"] {
+        background: #151923;
+        border: 1px solid #2b3240;
+        border-radius: 10px;
+        padding: 14px 16px;
+    }
+    [data-testid="stMetricLabel"] { color: #aab3c2; }
+    [data-testid="stMetricValue"] { color: #f5f7fb; }
+    .model-kicker {
+        color: #ff4b4b;
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 0.35rem;
+    }
+    .model-copy { color: #aab3c2; margin-bottom: 1rem; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 BASE_DIR = Path(__file__).resolve().parent
 
 
@@ -60,7 +85,7 @@ def run_analysis(data_path):
 def show_chart(filename, caption):
     chart_path = BASE_DIR / OUTPUT_DIR / filename
     if chart_path.exists():
-        st.image(str(chart_path), caption=caption, use_container_width=True)
+        st.image(str(chart_path), caption=f"{filename} | {caption}", use_container_width=True)
     else:
         st.warning(f"Chart output is missing: {filename}")
 
@@ -116,5 +141,62 @@ with catalog_tab:
     st.write(f"Products with a rating: {int(df['has_rating'].sum()):,} ({df['has_rating'].mean():.1%})")
 
 with model_tab:
-    st.write("The model predicts the main category from the product name using TF-IDF and logistic regression.")
-    st.text(report)
+    st.markdown('<div class="model-kicker">Machine learning evaluation</div>', unsafe_allow_html=True)
+    st.header("Product category prediction")
+    st.markdown(
+        '<div class="model-copy">A TF-IDF text pipeline and logistic regression classifier predict the main category from each product name.</div>',
+        unsafe_allow_html=True,
+    )
+
+    report_lines = report.strip().splitlines()
+    report_rows = []
+    summary = {}
+    for line in report_lines:
+        parts = line.split()
+        if len(parts) == 5 and parts[0] not in {"precision", "recall", "f1-score", "support"}:
+            try:
+                report_rows.append(
+                    {
+                        "Category": " ".join(parts[:-4]),
+                        "Precision": float(parts[-4]),
+                        "Recall": float(parts[-3]),
+                        "F1 score": float(parts[-2]),
+                        "Support": int(parts[-1]),
+                    }
+                )
+            except ValueError:
+                continue
+        elif parts and parts[0] in {"accuracy", "macro", "weighted"}:
+            if parts[0] == "accuracy" and len(parts) >= 3:
+                summary["Test samples"] = int(parts[-1])
+            elif parts[0] in {"macro", "weighted"} and len(parts) >= 5:
+                summary[f"{parts[0].title()} F1"] = float(parts[-2])
+
+    model_metrics = st.columns(4)
+    model_metrics[0].metric("Test accuracy", f"{accuracy:.1%}")
+    model_metrics[1].metric("Test samples", f"{summary.get('Test samples', 0):,}")
+    model_metrics[2].metric("Macro F1", f"{summary.get('Macro F1', 0):.2f}")
+    model_metrics[3].metric("Weighted F1", f"{summary.get('Weighted F1', 0):.2f}")
+
+    st.divider()
+    report_col, image_col = st.columns([1.1, 1], gap="large")
+    with report_col:
+        st.subheader("Per-category performance")
+        if report_rows:
+            st.dataframe(
+                report_rows,
+                hide_index=True,
+                use_container_width=True,
+                column_config={
+                    "Precision": st.column_config.NumberColumn(format="%.2f"),
+                    "Recall": st.column_config.NumberColumn(format="%.2f"),
+                    "F1 score": st.column_config.NumberColumn(format="%.2f"),
+                },
+            )
+        else:
+            st.code(report, language="text")
+    with image_col:
+        show_chart(
+            "category_prediction_confusion_matrix.png",
+            "Actual versus predicted categories",
+        )
